@@ -1,5 +1,5 @@
 homepage: "https://mineos.ai"
 documentation: "https://developers.mineos.ai/docs/cmp-overview-getting-started"
 versions:
-  - sha: c3e930ecdf270699e05572e7763c2fbfff4e22a8
-    changeNotes: Renamed template.tpl
+  - sha: 89225f849fe141af84e845fe2ee4e5196a6030ec
+    changeNotes: Initial release
