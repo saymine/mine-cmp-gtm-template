@@ -1,0 +1,5 @@
+homepage: "https://mineos.ai"
+documentation: "https://developers.mineos.ai/docs/cmp-overview-getting-started"
+versions:
+  - sha: 5f02a788b90ae804f86b04aa24af8937e567874a
+    changeNotes: Initial release.
