@@ -1,2 +1,3 @@
-# mine-cmp-gtm-template
-MineOS CMP GTM Template
+# MineOS Consent Management Platform — Google Tag Manager Template
+
+This repository contains the official Google Tag Manager (GTM) custom template for the MineOS Consent Management Platform (CMP). The template lets you deploy and configure the MineOS CMP on your website directly from your GTM container, without editing site code. Once imported, it exposes a set of configuration fields for controlling the consent banner, geo-targeting behavior, and integration with GTM's built-in Consent Mode, so your tags fire only in accordance with the choices your visitors make. It is designed to give marketing and privacy teams a fast, no-code path to a compliant consent experience while giving developers a transparent, auditable integration point.
