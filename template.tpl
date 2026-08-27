@@ -13,7 +13,6 @@ ___INFO___
   "id": "cvt_temp_public_id",
   "version": 1,
   "securityGroups": [],
-  "categories": ["UTILITY", "ANALYTICS", "MARKETING"],
   "displayName": "MineOS CMP",
   "brand": {
     "id": "brand_dummy",
@@ -83,12 +82,6 @@ ___TEMPLATE_PARAMETERS___
     "name": "url_passthrough",
     "checkboxText": "Pass through URL parameters",
     "simpleValueType": true
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "enableTcf",
-    "checkboxText": "Enable TCF integration",
-    "simpleValueType": true
   }
 ]
 
@@ -108,19 +101,18 @@ const gtagSet = require('gtagSet');
 
 /*
  *   Splits the input string using comma as a delimiter, returning an array of
- *   strings
+ *   trimmed non-empty strings
  */
-const splitInput = (input) => {
+function splitInput(input) {
   if (!input) return [];
   return input.split(',')
       .map(entry => entry.trim())
       .filter(entry => entry.length !== 0);
-};
+}
 /*
- *   Processes a row of input from the default settings table, returning an object
- *   which can be passed as an argument to setDefaultConsentState
+ *   Processes a row of input from the default settings table
  */
-const parseCommandData = (settings) => {
+function parseCommandData(settings) {
   const regions = splitInput(settings.region);
   const granted = splitInput(settings.granted);
   const denied = splitInput(settings.denied);
@@ -135,7 +127,7 @@ const parseCommandData = (settings) => {
     commandData[entry] = 'denied';
   });
   return commandData;
-};
+}
 
 
 // Execution starts here
@@ -145,28 +137,35 @@ gtagSet('ads_data_redaction', data.ads_data_redaction);
 gtagSet('url_passthrough', data.url_passthrough);
 gtagSet('developer_id.dZjAxN2', true);
 
-if(data.enableTcf) {
-  log('enabling tcf integration');
-  setInWindow('gtag_enable_tcf_support', true, true);
+//if(data.enableTcf) {
+//  log('enabling tcf integration');
+//  setInWindow('gtag_enable_tcf_support', true, true);
+//}
+
+if(data.defaultSettings) {
+  data.defaultSettings.forEach(settings => {
+    const defaultData = parseCommandData(settings);
+    // wait_for_update (ms) allows for time to receive visitor choices from the CMP
+    defaultData.wait_for_update = 500;
+    setDefaultConsentState(defaultData);
+  });
+} else {
+  // no default config, use a strict one
+  const defaultData = {
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    analytics_storage: 'denied',
+    functionality_storage: 'granted',
+    personalization_storage: 'denied',
+    security_storage: 'granted',
+    wait_for_update: 500
+  };
+  setDefaultConsentState(defaultData);
 }
 
-const initialConsent = parseCommandData(data.defaultSettings);
-initialConsent.wait_for_update = 500;
-setDefaultConsentState(initialConsent);
 
-
-const consentModeStates = {
-  ad_storage: 'denied',
-  ad_user_data: 'denied',
-  ad_personalization: 'denied',
-  analytics_storage: 'denied',
-  functionality_storage: 'granted',
-  personalization_storage: 'denied',
-  security_storage: 'granted',
-  wait_for_update: 500
-};
-
-// this needs to take into account existing consent in local storage
+// TODO: take into account existing consent in local storage
 
 function scriptLoaded() {
 }
@@ -606,14 +605,13 @@ scenarios:
     const mockData = {
       // Mocked field values
       websiteId :'dg-d587f56f-a5dc-4c27-ab82-cedc72dac4c0',
-      defaultSettings: {
-        region:'EU',
+      defaultSettings: [{
+        region:'',
         granted:'functionality_storage,personalization_storage,security_storage',
         denied:'ad_user_data,ad_personalization,analytics_storage'
-      },
+      }],
       ads_data_redaction: true,
-      url_passthrough: true,
-      enableTcf: false
+      url_passthrough: true
     };
 
     // Call runCode to run the template's code.
@@ -624,19 +622,23 @@ scenarios:
     assertApi('setDefaultConsentState').wasCalled();
     assertApi('setInWindow').wasNotCalled();
     assertApi('gtmOnSuccess').wasCalled();
-- name: TCF Test
+- name: Multi Region Test
   code: |-
     const mockData = {
       // Mocked field values
       websiteId :'dg-d587f56f-a5dc-4c27-ab82-cedc72dac4c0',
-      defaultSettings: {
-        region:'EU',
+      defaultSettings: [{
+        region:'',
         granted:'functionality_storage,personalization_storage,security_storage',
         denied:'ad_user_data,ad_personalization,analytics_storage'
       },
+      {
+        region:'EU,US-CA',
+        granted:'security_storage',
+        denied:'ad_user_data,ad_personalization,analytics_storage,functionality_storage,personalization_storage'
+      }],
       ads_data_redaction: true,
-      url_passthrough: true,
-      enableTcf: true
+      url_passthrough: true
     };
 
     // Call runCode to run the template's code.
@@ -645,12 +647,27 @@ scenarios:
     // Verify that the tag finished successfully.
     assertApi('injectScript').wasCalled();
     assertApi('setDefaultConsentState').wasCalled();
-    assertApi('setInWindow').wasCalledWith('gtag_enable_tcf_support', true, true);
+    assertApi('setInWindow').wasNotCalled();
+    assertApi('gtmOnSuccess').wasCalled();
+- name: Empty settings Test
+  code: |-
+    const mockData = {
+      // Mocked field values
+      websiteId :'dg-d587f56f-a5dc-4c27-ab82-cedc72dac4c0'
+    };
+
+    // Call runCode to run the template's code.
+    runCode(mockData);
+
+    // Verify that the tag finished successfully.
+    assertApi('injectScript').wasCalled();
+    assertApi('setDefaultConsentState').wasCalled();
+    assertApi('setInWindow').wasNotCalled();
     assertApi('gtmOnSuccess').wasCalled();
 
 
 ___NOTES___
 
-Created on 7/27/2026, 6:40:09 PM
+Created on 8/27/2026, 6:37:35 PM
 
 
