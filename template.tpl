@@ -98,6 +98,7 @@ const getCookieValues = require('getCookieValues');
 const setCookie = require('setCookie');
 const setInWindow = require('setInWindow');
 const gtagSet = require('gtagSet');
+const encodeUriComponent = require('encodeUriComponent');
 
 /*
  *   Splits the input string using comma as a delimiter, returning an array of
@@ -168,15 +169,27 @@ if(data.defaultSettings) {
 // TODO: take into account existing consent in local storage
 
 function scriptLoaded() {
+  const cmpUrl = 'https://cmp.mineos.ai/cmp.js';
+  log('MineOS cmp loading cmp =', cmpUrl);
+  inject(cmpUrl, data.gtmOnSuccess(), data.gtmOnFailure, cmpUrl);
 }
+
+function scriptFailed() {
+  data.gtmOnFailure();
+}
+
 
 // load mineos cmp scripts
 const websiteId = data.websiteId;
-const configUrl = 'https://cmp.mineos.ai/' + websiteId + '/configuration.js';
-log('MineOS cmp loading =', configUrl);
-inject(configUrl, scriptLoaded(), data.gtmOnFailure, configUrl);
-const cmpUrl = 'https://cmp.mineos.ai/cmp.js';
-inject(cmpUrl, data.gtmOnSuccess(), data.gtmOnFailure, cmpUrl);
+
+if (!websiteId || websiteId.indexOf('/') !== -1) {
+  data.gtmOnFailure();
+  return;
+}
+
+const configUrl = 'https://cmp.mineos.ai/' + encodeUriComponent(websiteId) + '/configuration.js';
+log('MineOS cmp loading config =', configUrl);
+inject(configUrl, scriptLoaded(), scriptFailed(), configUrl);
 
 
 ___WEB_PERMISSIONS___
@@ -668,6 +681,6 @@ scenarios:
 
 ___NOTES___
 
-Created on 8/27/2026, 6:37:35 PM
+Created on 8/27/2026, 6:45:21 PM
 
 
