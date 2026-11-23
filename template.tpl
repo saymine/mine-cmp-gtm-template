@@ -168,14 +168,10 @@ if(data.defaultSettings) {
 
 // TODO: take into account existing consent in local storage
 
-function scriptLoaded() {
+function loadCmpScript() {
   const cmpUrl = 'https://cmp.mineos.ai/cmp.js';
   log('MineOS cmp loading cmp =', cmpUrl);
-  inject(cmpUrl, data.gtmOnSuccess(), data.gtmOnFailure, cmpUrl);
-}
-
-function scriptFailed() {
-  data.gtmOnFailure();
+  inject(cmpUrl, ()=>{data.gtmOnSuccess();}, ()=>{data.gtmOnFailure();}, cmpUrl);
 }
 
 
@@ -189,7 +185,15 @@ if (!websiteId || websiteId.indexOf('/') !== -1) {
 
 const configUrl = 'https://cmp.mineos.ai/' + encodeUriComponent(websiteId) + '/configuration.js';
 log('MineOS cmp loading config =', configUrl);
-inject(configUrl, scriptLoaded(), scriptFailed(), configUrl);
+inject(configUrl,
+       () => {
+          log('inject cmp config success');
+          loadCmpScript();
+       },
+       () => {
+          log('inject cmp config failed');
+          data.gtmOnFailure();
+       }, configUrl);
 
 
 ___WEB_PERMISSIONS___
@@ -681,6 +685,6 @@ scenarios:
 
 ___NOTES___
 
-Created on 8/27/2026, 6:45:21 PM
+Created on 11/24/2026, 12:24:10 AM
 
 
